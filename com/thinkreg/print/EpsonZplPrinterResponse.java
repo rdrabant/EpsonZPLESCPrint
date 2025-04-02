@@ -20,7 +20,6 @@
  */
 package com.thinkreg.print;
 
-import com.thinkreg.boot.util.WRPUtils;
 
 public class EpsonZplPrinterResponse{
 	
@@ -80,7 +79,7 @@ public class EpsonZplPrinterResponse{
 	//	RR Replace Ink cartridge
 	//	NA Ink cartridge not installed
 	//	CI Ink cartridge installed
-		if(WRPUtils.isEmpty(code)){
+		if(code == null || code.trim().length() == 0){
 			return null;
 		}
 		
@@ -107,7 +106,6 @@ public class EpsonZplPrinterResponse{
 		return null;
 	
 	}
-	
 	
 	
 }
