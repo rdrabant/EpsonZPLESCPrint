@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Robert James Drabant II, ThinkREG
+ * Copyright 2025 Robert James Drabant II, ThinkREG
  * 
  * Created because I wanted a cleaner way to print to our Epsons we use in 
  * conference and event management. We have mostly 4000s, but this should 
@@ -53,18 +53,15 @@ public class EpsonZplPrintJob{
 	private Float leadingEdgeAdjustment;
 	private Float leftEdgeAdj;
 	
-	public EpsonZplPrintJob(String ip, int port, LABEL_EDGE_DETECTION labelEdgeDetection) throws Exception {
+	public EpsonZplPrintJob(String ip, int port){
 		this.ip = ip;
 		this.port = port;
-		this.labelEdgeDetection = labelEdgeDetection;
 	}
 	
-	public EpsonZplPrintJob(String ip, int port, List<BufferedImage> images, 
-			LABEL_EDGE_DETECTION labelEdgeDetection) throws Exception {
+	public EpsonZplPrintJob(String ip, int port, List<BufferedImage> images){
 		this.ip = ip;
 		this.port = port;
 		this.images = images;
-		this.labelEdgeDetection = labelEdgeDetection;
 	}
 	
 
@@ -174,18 +171,20 @@ public class EpsonZplPrintJob{
 	}
 	
 	
-	public void calibrate() throws IOException {
+	public EpsonZplPrinterResponse calibrate() throws IOException {
 		    
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	        
 		baos.writeBytes("^XA~JC^XZ".getBytes()); 
 		baos.writeBytes("\r".getBytes());
-	        
+	   
+		EpsonZplPrinterResponse response = null;
+	    
 		try {
 							
 			byte[] zplBytes = baos.toByteArray();
 				
-			printZpl(zplBytes, this.ip, this.port);
+			response = printZpl(zplBytes, this.ip, this.port);
 			
 		}catch(Exception ex) {
 			ex.printStackTrace();
@@ -193,6 +192,13 @@ public class EpsonZplPrintJob{
 			
 	        
 		baos = null;
+		
+		if(response == null) {
+			response = new EpsonZplPrinterResponse();
+			response.setMessage("unknown error");
+		}
+		
+		return response;
 
 	}
 	
@@ -252,9 +258,10 @@ public class EpsonZplPrintJob{
 	
 	/**
 	 * pushes mark type, left edge, top edge adjustments to printer
+	 * @return 
 	 * @throws IOException
 	 */
-	public void updatePrinterSettings() throws IOException {
+	public EpsonZplPrinterResponse updatePrinterSettings() throws IOException {
 		//long start = System.currentTimeMillis();
 		    
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -309,6 +316,8 @@ public class EpsonZplPrintJob{
 	        
 //	    File badgeAsFileZpl = new File("D:\\BadgeAsFile.zpl");
 	        
+		EpsonZplPrinterResponse response = null;
+		
 		try /*(BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(badgeAsFileZpl));
 	        		)*/{
 							
@@ -317,11 +326,20 @@ public class EpsonZplPrintJob{
 //			long currentTime = System.currentTimeMillis();
 //			long progress = 0;
 				
-			printZpl(zplBytes, this.getIp(), 9100);
+			response = printZpl(zplBytes, this.getIp(), 9100);
 //	        		printerDAO.doSave(printer);
 		}catch(Exception ex) {
 			ex.printStackTrace();
 		}
+		
+		
+		if(response == null) {
+			response = new EpsonZplPrinterResponse();
+			response.setMessage("unknown error");
+		}
+		
+		return response;
+		
 	}
 	
 	
@@ -668,9 +686,9 @@ public class EpsonZplPrintJob{
 		//media source, media shape,
 		//or media coating type).
 		
-		LABEL_EDGE_DETECTION_BLACK_MARK ("M"),
-		LABEL_EDGE_DETECTION_GAP ("W"),
-		LABEL_EDGE_DETECTION_NONE ("D");
+		BLACK_MARK ("M"),
+		GAP ("W"),
+		NONE ("D");
 		
 		private final String type;   // in kilograms
 	    
