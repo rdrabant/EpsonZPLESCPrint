@@ -24,7 +24,8 @@ if(response.getSuccess() != null) {
 **To print....**
 <code>
 List<BufferedImage> images = new ArrayList<BufferedImage>();
-images.add(<your image>);
+BufferedImage yourBufferedImage = ......an image you created
+images.add(yourBufferedImage);
 pj.setImages(images);
 EpsonZplPrinterResponse response = pj.print();
 
