@@ -1,6 +1,7 @@
 /*
  * Copyright 2025 Robert James Drabant II, ThinkREG
- * 
+ * https://www.linkedin.com/in/robert-drabant/
+ *
  * Created because I wanted a cleaner way to print to our Epsons we use in 
  * conference and event management. We have mostly 4000s, but this should 
  * work with any Epson that supports ZPLII/ESC. I also want to thank team 
