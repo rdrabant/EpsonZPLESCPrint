@@ -60,13 +60,9 @@ String message = response.getMessage();
 </code>
 
 
-The following files helped me in my journey. 
-
+The following files helped me in my journey. <code>
 https://files.support.epson.com/pdf/pos/bulk/cw-c4000_esclabel_crg_en_revc.pdf
 https://files.support.epson.com/pdf/pos/bulk/esclabel_cl_cw-c_en_06.pdf
 https://files.support.epson.com/pdf/pos/bulk/esclabel_crg_en_07.pdf
 https://files.support.epson.com/pdf/pos/bulk/esclabel_apg_en_forcw-c6000series_reve.pdf
-
-
-
-		
+</code>
