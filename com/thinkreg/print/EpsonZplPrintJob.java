@@ -158,8 +158,6 @@ public class EpsonZplPrintJob{
 			
 	        baos = null;
 	        
-	       
-
 		}
 		
 		if(response == null) {
@@ -230,7 +228,7 @@ public class EpsonZplPrintJob{
 	}
 	
 	/**
-	 * Pause the printer
+	 * UnPause the printer
 	 * @throws IOException
 	 */
 	public void cancelPausePrinter() throws IOException {
