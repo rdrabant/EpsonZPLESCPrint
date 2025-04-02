@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Robert James Drabant II, ThinkREG
+ * Copyright 2025 Robert James Drabant II, ThinkREG
  * 
  * Created because I wanted a cleaner way to print to our Epsons we use in 
  * conference and event management. We have mostly 4000s, but this should 
@@ -107,8 +107,6 @@ public class EpsonZplPrinterResponse{
 		return null;
 	
 	}
-	
-	
 	
 	
 	
