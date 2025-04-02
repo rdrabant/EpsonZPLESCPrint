@@ -42,7 +42,7 @@ public class EpsonZplPrintJob{
 	public static final byte[] COMMAND_SAVE_TO_NON_VOLATILE_MEMORY = "^JU".getBytes();
 	
 	
-	private DPI dpi = DPI.DPI_600;
+	private DPI dpi = null;
 	private LABEL_EDGE_DETECTION labelEdgeDetection = null;
 	private FEED_AND_CUT_MODE feedAndCutMode = null;
 	private PRINT_QUALITY printQuality = null;
@@ -293,6 +293,12 @@ public class EpsonZplPrintJob{
 		if(this.getLeftEdgeAdj() != null) {
 			
 			baos.writeBytes(("^S(CLE,M," + this.getLeftEdgeAdj() +  "\r").getBytes()); //M: Physical label left edge position adjustment [dot]
+			//+/-36
+		}
+		
+		if(this.getDpi() != null) {
+			
+			baos.writeBytes((this.getDpi().getZPL() +  "\r").getBytes()); //M: Physical label left edge position adjustment [dot]
 			//+/-36
 		}
 		
