@@ -9,8 +9,7 @@ This assumes the printer has an IP of 192.168.1.50
 <code>
 EpsonZplPrintJob pj = new EpsonZplPrintJob("192.168.1.50", 9100);
 Boolean sucessfullyCompleted = false;
-</code>
-**
+</code>**
 
 
 **To calibrate the sensor, now just call the following**. 
