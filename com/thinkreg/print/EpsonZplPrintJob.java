@@ -130,7 +130,7 @@ public class EpsonZplPrintJob{
 	        baos.writeBytes("^MMC".getBytes()); //Media command to cut label after print
 		    baos.writeBytes("\r".getBytes());
 	        
-	        baos.writeBytes("^FO0,0^IMR:BADGE.PNG^FS".getBytes());	// 3. Arrange the graphic in the position (100,100).
+	        baos.writeBytes("^FO0,0^IMR:BADGE.PNG^FS".getBytes());	// 3. Arrange the graphic in the position (0,0).
 	        baos.writeBytes("^XZ".getBytes());
 	        baos.writeBytes("\r".getBytes());
 
