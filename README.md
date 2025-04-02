@@ -41,6 +41,7 @@ pj.setFeedAndCutMode(EpsonZplPrintJob.FEED_AND_CUT_MODE.AUTOCUT);
 pj.setLabelEdgeDetection(EpsonZplPrintJob.LABEL_EDGE_DETECTION.GAP);
 pj.setPrintQuality(EpsonZplPrintJob.PRINT_QUALITY.NORMAL);
 pj.setFeedAndCutMode(EpsonZplPrintJob.FEED_AND_CUT_MODE.AUTOCUT);
+pj.setDpi(EpsonZplPrintJob.DPI.DPI_600);
 //+/-36 dots
 pj.setLeftEdgeAdj(Float.valueOf(25));
 //+/- 256
