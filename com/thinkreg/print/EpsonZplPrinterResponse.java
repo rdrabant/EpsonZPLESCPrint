@@ -128,8 +128,8 @@ public class EpsonZplPrintJob{
 	        
 	        baos.writeBytes("\r".getBytes());
 	        baos.writeBytes("^XA".getBytes());
-	        baos.writeBytes("^MMC".getBytes()); //Media command to cut label after print
-		    baos.writeBytes("\r".getBytes());
+	       // baos.writeBytes("^MMC".getBytes()); //Media command to cut label after print
+	//	    baos.writeBytes("\r".getBytes());
 	        
 	        baos.writeBytes("^FO0,0^IMR:BADGE.PNG^FS".getBytes());	// 3. Arrange the graphic in the position (0,0).
 	        baos.writeBytes("^XZ".getBytes());
@@ -293,6 +293,11 @@ public class EpsonZplPrintJob{
 			
 			baos.writeBytes(("^S(CLE,M," + this.getLeftEdgeAdj() +  "\r").getBytes()); //M: Physical label left edge position adjustment [dot]
 			//+/-36
+		}
+
+		if(this.getFeedAndCutMode() != null) {
+			
+			baos.writeBytes((this.getFeedAndCutMode().getZPL() +  "\r").getBytes()); 
 		}
 		
 		if(this.getDpi() != null) {
@@ -725,7 +730,7 @@ public class EpsonZplPrintJob{
 		NO_CUTTING("T"),
 		MANUAL_PEEL_AND_APPLICATION ("P"),
 		REWIND ("R"),
-		AUTOMATIC_PEEL_AND_APPLICATION ("A"),
+		AUTOMATIC_PEEL_AND_APPLICATION ("A"), //not suppored on c4000s
 		AUTOCUT ("C");
 		
 		private final String feedmode;   
