@@ -22,20 +22,24 @@
 package com.thinkreg.print;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+
+import com.thinkreg.boot.util.WRPUtils;
 
 
 public class EpsonZplPrintJob{
@@ -47,12 +51,18 @@ public class EpsonZplPrintJob{
 	private LABEL_EDGE_DETECTION labelEdgeDetection = null;
 	private FEED_AND_CUT_MODE feedAndCutMode = null;
 	private PRINT_QUALITY printQuality = null;
+	private UNITS_OF_MEASUREMENT unitsOfMeasurement = null;
 	
 	private List<BufferedImage> images = new ArrayList<BufferedImage>();
 	private String ip;
 	private int port;
 	private Float leadingEdgeAdjustment;
 	private Float leftEdgeAdj;
+	private BigDecimal labelHeight = null;
+	private BigDecimal labelWidth = null;
+	private Integer cloggedNozzles;
+	private Integer nozzleCheckLabel;
+	
 	
 	public EpsonZplPrintJob(String ip, int port){
 		this.ip = ip;
@@ -80,7 +90,7 @@ public class EpsonZplPrintJob{
         
 		for(BufferedImage image: images) {
 			//int width = image.getWidth();
-			int height = image.getHeight();
+			//int height = image.getHeight();
 			
 			//height = height - 100;
 			
@@ -103,17 +113,7 @@ public class EpsonZplPrintJob{
 //	        baos.writeBytes("^S(CLR, R, 600".getBytes()); //Sets the rendering resolution at 600 [dpi].
 //	        baos.writeBytes("^S(CLR, P, 600".getBytes()); //Sets the printing resolution at 600 [dpi]
 	        //baos.writeBytes(("^MU I, " + DPI + ", " + DPI).getBytes()); //Sets units to inches, rendering res, printing res
-	        baos.writeBytes((dpi.getZPL() + "\r").getBytes()); //Sets printing res
 	        
-
-	        //	^LT###### Adjustment for label top edge dots -9999 ≤ d ≤ 9999 		(Varies depending on the model)
-	        //baos.writeBytes(("^LT, " + DotsToChange).getBytes()); 
-	        
-	        double heightInches = (double)height/(double)dpi.getResolution();
-	        NumberFormat DF =  new DecimalFormat("###.000");
-	        //System.out.println("HEIGHT: " + width + " HEIGHT IN INCHES: " + heightInches + " " + DF.format(heightInches));
-	        baos.writeBytes(("^S(CLS,L," + DF.format(heightInches)).getBytes()); //Sets label length in inches
-	        baos.writeBytes("^JU".getBytes()); //save to printers non volitaile memory
 	        
     		
 	        //baos.writeBytes("^S(CLS, P, 2400".getBytes()); //Sets the label width at 4 inches.
@@ -128,8 +128,8 @@ public class EpsonZplPrintJob{
 	        
 	        baos.writeBytes("\r".getBytes());
 	        baos.writeBytes("^XA".getBytes());
-	        baos.writeBytes("^MMC".getBytes()); //Media command to cut label after print
-		    baos.writeBytes("\r".getBytes());
+	       // baos.writeBytes("^MMC".getBytes()); //Media command to cut label after print
+	//	    baos.writeBytes("\r".getBytes());
 	        
 	        baos.writeBytes("^FO0,0^IMR:BADGE.PNG^FS".getBytes());	// 3. Arrange the graphic in the position (0,0).
 	        baos.writeBytes("^XZ".getBytes());
@@ -149,7 +149,7 @@ public class EpsonZplPrintJob{
 	        	//fos.write(zplBytes);
 //					long currentTime = System.currentTimeMillis();
 				
-	        	return printZpl(zplBytes, this.getIp(), 9100);
+	        	return sendZpl(zplBytes, this.getIp(), 9100);
 	        }catch(Exception ex) {
 	        	response = new EpsonZplPrinterResponse();
 	        	response.setSuccess(false);
@@ -183,7 +183,7 @@ public class EpsonZplPrintJob{
 							
 			byte[] zplBytes = baos.toByteArray();
 				
-			response = printZpl(zplBytes, this.ip, this.port);
+			response = sendZpl(zplBytes, this.ip, this.port);
 			
 		}catch(Exception ex) {
 			ex.printStackTrace();
@@ -218,7 +218,7 @@ public class EpsonZplPrintJob{
 							
 			byte[] zplBytes = baos.toByteArray();
 				
-			printZpl(zplBytes, this.ip, this.port);
+			sendZpl(zplBytes, this.ip, this.port);
 			
 		}catch(Exception ex) {
 			ex.printStackTrace();
@@ -244,7 +244,7 @@ public class EpsonZplPrintJob{
 							
 			byte[] zplBytes = baos.toByteArray();
 				
-			printZpl(zplBytes, this.ip, this.port);
+			sendZpl(zplBytes, this.ip, this.port);
 			
 		}catch(Exception ex) {
 			ex.printStackTrace();
@@ -258,9 +258,9 @@ public class EpsonZplPrintJob{
 	/**
 	 * pushes mark type, left edge, top edge adjustments to printer
 	 * @return 
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public EpsonZplPrinterResponse updatePrinterSettings() throws IOException {
+	public EpsonZplPrinterResponse updatePrinterSettings() throws Exception {
 		//long start = System.currentTimeMillis();
 		    
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -274,9 +274,7 @@ public class EpsonZplPrintJob{
 //		b=T: Physical label leading edge
 //		position adjustment [dot]
 		//baos.writeBytes("^S(CMP,U,I \r".getBytes()); //1. Sets units to inches
-		baos.writeBytes("^S(CMP,U,D \r".getBytes()); //1. Sets units to dots
-		//^S(CLP cut position and feed adjustment
-		//FloatValidator floatVal = FloatValidator.getInstance();
+		baos.writeBytes(UNITS_OF_MEASUREMENT.DOTS.getZPL(dpi).getBytes()); //1. Sets units to dots
 
 		//https://files.support.epson.com/pdf/pos/bulk/cw-c4000_esclabel_crg_en_revc.pdf
 		if(this.getLeadingEdgeAdjustment() != null/*&& 
@@ -295,22 +293,83 @@ public class EpsonZplPrintJob{
 			//+/-36
 		}
 		
-		if(this.getDpi() != null) {
+		if(this.getNozzleCheckLabel() != null && this.getNozzleCheckLabel() > 0) {
+			baos.writeBytes(("^S(CMV,I," + this.getNozzleCheckLabel()  +  "\r").getBytes()); //M: Physical label left edge position adjustment [dot]
+		}
+
+		if(this.getCloggedNozzles() != null && this.getCloggedNozzles() > 0) {
+			baos.writeBytes(("^S(CMV,C," + this.getCloggedNozzles()  +  "\r").getBytes()); //M: Physical label left edge position adjustment [dot]
+		}
+		
+		if(this.getFeedAndCutMode() != null) {
 			
-			baos.writeBytes((this.getDpi().getZPL() +  "\r").getBytes()); //M: Physical label left edge position adjustment [dot]
-			//+/-36
+			baos.writeBytes(this.getFeedAndCutMode().getZPL().getBytes()); 
+		}
+		
+		if(this.getDpi() != null) {
+			baos.writeBytes(this.getDpi().getZPL().getBytes());
 		}
 		
 		if(this.getPrintQuality() !=null) {
-			
-			baos.writeBytes((this.getPrintQuality().getZPL() +  "\r").getBytes()); //Q: Print quality
-			
+			baos.writeBytes(this.getPrintQuality().getZPL().getBytes()); //Q: Print quality
 		}
 		
 		if(this.getLabelEdgeDetection() != null) {
-//			baos.writeBytes(("^MN" + job.getLabelEdgeDetection() +  "\r").getBytes()); 
-			baos.writeBytes((this.getLabelEdgeDetection().getZPL() +  "\r").getBytes()); //1. Set label detection to gap, blackmark, or none
+			baos.writeBytes(this.getLabelEdgeDetection().getZPL().getBytes()); //1. Set label detection to gap, blackmark, or none
 		}
+		
+		if(this.getUnitsOfMeasurement() != null) {
+			baos.writeBytes(this.getUnitsOfMeasurement().getZPL(dpi).getBytes()); 
+		}
+
+//		if(this.getUnitsOfMeasurement() == null) {
+//			System.out.println("Unit's of measurement: null");
+//		}else {
+//			System.out.println("Unit's of measurement: " + this.getUnitsOfMeasurement());
+//		}
+//		System.out.println("getLabelHeight: " + this.getLabelHeight());
+//		System.out.println("getLabelWidth: " + this.getLabelWidth());
+
+		if(this.getLabelHeight() != null &&
+        		this.getUnitsOfMeasurement() != null) {
+        	
+        	//baos.writeBytes(this.getUnitsOfMeasurement().getZPL()).getBytes()); 
+        	baos.writeBytes(UNITS_OF_MEASUREMENT.DOTS.getZPL().getBytes());
+			//b=L: Label width [dot]
+        	
+        	if(this.getUnitsOfMeasurement() == UNITS_OF_MEASUREMENT.INCHES && this.getDpi() != null) {
+        		int dots = new BigDecimal(this.getDpi().getResolution()).multiply(this.getLabelHeight()).intValue();
+        		baos.writeBytes(("^S(CLS,L," + dots + "\r").getBytes()); //Sets label length in inches
+            }else if(this.getUnitsOfMeasurement() == UNITS_OF_MEASUREMENT.MILLIMETERS && this.getDpi() != null) {
+        		
+            	BigDecimal dots = new BigDecimal(this.getDpi().getResolution()).multiply(this.getLabelHeight());
+            	dots = dots.divide(new BigDecimal(25.4));
+        		baos.writeBytes(("^S(CLS,L," + dots + "\r").getBytes()); //Sets label length in inches
+            }else{
+            	baos.writeBytes(("^S(CLS,L," + this.getLabelHeight() + "\r").getBytes()); //Sets label length in inches
+            }
+        }
+		
+		if(this.getLabelWidth() != null &&
+        		this.getUnitsOfMeasurement() != null) {
+        	
+        	//baos.writeBytes(this.getUnitsOfMeasurement().getZPL().getBytes()); 
+        	baos.writeBytes(UNITS_OF_MEASUREMENT.DOTS.getZPL().getBytes());
+        	//b=P: Label width [dot]
+        	
+        	if(this.getUnitsOfMeasurement() == UNITS_OF_MEASUREMENT.INCHES && this.getDpi() != null) {
+        		int dots = new BigDecimal(this.getDpi().getResolution()).multiply(this.getLabelWidth()).intValue();
+        		baos.writeBytes(("^S(CLS,P," + dots + "\r").getBytes()); //Sets label length in inches
+            }else if(this.getUnitsOfMeasurement() == UNITS_OF_MEASUREMENT.MILLIMETERS && this.getDpi() != null) {
+        		
+            	BigDecimal dots = new BigDecimal(this.getDpi().getResolution()).multiply(this.getLabelWidth());
+            	dots = dots.divide(new BigDecimal(25.4));
+        		baos.writeBytes(("^S(CLS,P," + dots + "\r").getBytes()); //Sets label length in inches
+            }else{
+            	baos.writeBytes(("^S(CLS,P," + this.getLabelWidth() + "\r").getBytes()); //Sets label length in inches
+            }
+        	
+        }
 		
 		
 		baos.writeBytes("^JUS\r".getBytes());
@@ -331,7 +390,7 @@ public class EpsonZplPrintJob{
 //			long currentTime = System.currentTimeMillis();
 //			long progress = 0;
 				
-			response = printZpl(zplBytes, this.getIp(), 9100);
+			response = sendZpl(zplBytes, this.getIp(), 9100);
 //	        		printerDAO.doSave(printer);
 		}catch(Exception ex) {
 			ex.printStackTrace();
@@ -349,7 +408,7 @@ public class EpsonZplPrintJob{
 	
 	
 	
-	private EpsonZplPrinterResponse printZpl(byte[] zpl, String ip, int port) throws Exception {
+	private EpsonZplPrinterResponse sendZpl(byte[] zpl, String ip, int port) throws Exception {
 		
 		System.out.println("ABOUT TO TRY TO SEND ZPL: " + ip +":" + port);
 		
@@ -361,14 +420,29 @@ public class EpsonZplPrintJob{
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
-		baos.write(zpl);
+		if(!WRPUtils.isEmpty(zpl)) {
+			baos.write(zpl);
+		}
 	        
-		baos.writeBytes("^XA\\r".getBytes()); //1. 
-		baos.writeBytes("~H(QIQ".getBytes()); //sends the remaining ink for all colors in the printer.
-		baos.writeBytes("~H(QMN".getBytes()); //sends the remaining Maintiance kit life.
+		baos.writeBytes("^XA\r".getBytes()); //1. 
+		baos.writeBytes("~H(SEA,E\r".getBytes()); //Sends the printer error status
+		
+		//baos.writeBytes("~H(SMA,S\r".getBytes()); //Sends the printer operation status
+//		2-character ASCII string
+//		 ER: Error state
+//		 SP: Self printing
+//		 PR: Print operation state
+//		 WT: Waiting
+//		 IL: Idling
+//		 PS: Pause
+//		 CL: Head maintenance
+//		 FC: Factory shipment state
+//		 UP: Firmware updating
+		baos.writeBytes("~H(QIQ\r".getBytes()); //sends the remaining ink for all colors in the printer.
+		baos.writeBytes("~H(QMN\r".getBytes()); //sends the remaining Maintenance kit life.
+		
 //		baos.writeBytes("~H(S".getBytes()); //(Get printer operation status) command to get the printer error status.
 //		baos.writeBytes("~H(Q".getBytes()); //(Get printer status) command to get the printer warning status
-//		baos.writeBytes("~HS".getBytes()); //(Get printer status) command to get the printer warning status
 //		baos.writeBytes("^HH".getBytes()); //(Get printer status) command to get the printer warning status
 //		baos.writeBytes("~H(CLM,D".getBytes()); //label edge detection
 //		baos.writeBytes("~H(CLP,O".getBytes()); //cut position adjustment
@@ -387,11 +461,25 @@ public class EpsonZplPrintJob{
 		
 		//baos.writeBytes("~H(SMA,S".getBytes()); //ER (error status) is returned
 
-		baos.writeBytes("^XZ".getBytes()); //1. Delete the files from the printer.
+		baos.writeBytes("^XZ\r".getBytes()); //1. Delete the files from the printer.
 		
 		zpl = baos.toByteArray();
+		
+		
+		 
+        File badgeAsFileZpl = new File("D:\\BadgeAsFile" + this.getIp() + ".zpl");
+        
+        try (BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(badgeAsFileZpl));){
+        				
+        	fos.write(zpl);
+		
+        }catch(Exception ex) {
+        	ex.printStackTrace();
+        }
+		
+		
 
-		long start = System.currentTimeMillis();
+//		long start = System.currentTimeMillis();
 		EpsonZplPrinterResponse response = new EpsonZplPrinterResponse();
 
 		try (Socket clientSocket = new Socket(ip, port);
@@ -417,10 +505,10 @@ public class EpsonZplPrintJob{
 	        char STX = (char) Integer.parseInt("02", 16);//STX
 	        char ETX = (char) Integer.parseInt("03", 16);//ETX
 	        
-	        //long continueListinging = System.currentTimeMillis();
-	        start = System.currentTimeMillis();
+	        //start = System.currentTimeMillis();
 	        
-	        boolean readIq = false;
+	        //boolean readIq = false;
+	        //laast command is Mn
 	        boolean readMn = false;
 	        //boolean printerStatus = 
 	        boolean done = false;
@@ -437,7 +525,11 @@ public class EpsonZplPrintJob{
 			    
 			    //System.out.println("fromPrinter: " + fromPrinter);
 			    
-			    if(fromPrinter.startsWith("IQ,")) {//It's ink levels
+			    if(fromPrinter.startsWith("^S(SEA,E,")) {//It's ink levels
+			    	fromPrinter = fromPrinter.replace("^S(SEA,E,", "");
+			    	response.setErrorStatus(fromPrinter);
+			    	
+			    }else if(fromPrinter.startsWith("IQ,")) {//It's ink levels
 			    	fromPrinter = fromPrinter.replace("IQ,", "");
 			    	
 			    	String[] inkLevels = fromPrinter.split(",");
@@ -475,50 +567,8 @@ public class EpsonZplPrintJob{
 //			    	System.out.println("BLACK: " + black + " Cyan: " + cyan + " Magenta: " + magenenta + 
 //			    			" Yellow: " + yellow);
 			    	
-			    	readIq = true;
-			    }
-			    
-			    /*if(fromPrinter.startsWith("~H(IMM")) {//It's ink levels
-			    	fromPrinter = fromPrinter.replace("IQ,", "");
-			    	
-			    	String[] inkLevels = fromPrinter.split(",");
-			    	//<STX> IQ, <remaining black ink>, <remaining cyan ink>,<remaining magenta ink>, <remaining
-			    	//yellow ink><ETX><CR><LF>
-//			    	RH Enough ink in cartridge
-//			    	RM Moderate ink in cartridge
-//			    	RL Small ink in cartridge
-//			    	RN Ink cartridge low
-//			    	RR Replace Ink cartridge
-//			    	NA Ink cartridge not installed
-//			    	CI Ink cartridge installed
-			    	String black = "unknown";
-		    		String cyan = "unknown";
-		    		String magenenta = "unknown";
-		    		String yellow = "unknown";
-		    		
-			    	if(!WRPUtils.isEmpty(inkLevels)) {
-			    		black = inkLevels[0];
-			    		
-			    		if(inkLevels.length > 1) {
-			    			cyan = inkLevels[1];
-			    		}
-			    		
-			    		if(inkLevels.length > 2) {
-			    			magenenta = inkLevels[2];
-			    		}
-			    		
-			    		if(inkLevels.length > 3) {
-			    			yellow = inkLevels[3];
-			    		}
-			    	}
-			    	
-			    	System.out.println("BLACK: " + black + " Cyan: " + cyan + " Magenta: " + magenenta + 
-			    			" Yellow: " + yellow);
-			    	
-			    	readIq = true;
-			    }*/
-			    
-			    if(fromPrinter.startsWith("MN,")) {//It's ink levels
+			    	//readIq = true;
+			    }else if(fromPrinter.startsWith("MN,")) {//It's ink levels
 			    	fromPrinter = fromPrinter.replace("MN,", "");
 			    	
 			    	//<STX> IQ, <remaining black ink>, <remaining cyan ink>,<remaining magenta ink>, <remaining
@@ -563,7 +613,7 @@ public class EpsonZplPrintJob{
 				
 //		    	System.out.println("readIq: " +readIq + " readMn: " + readMn);
 			    
-			    if(readIq && readMn) {
+			    if(/*readIq &&*/ readMn) {
 			    	done = true;
 //			    	System.out.println("Read Complete in " + (System.currentTimeMillis() - start));
 			    }
@@ -573,7 +623,8 @@ public class EpsonZplPrintJob{
 			}
 		
 			
-	        response.setMessage((System.currentTimeMillis() - start) + " millis to connect to printer and transmits data.");
+	        //response.setMessage((System.currentTimeMillis() - start) + " millis to connect to printer and transmits data.");
+	        
 	        response.setSuccess(true);
 		}catch(ConnectException c1) {
 			response.setMessage("Cannot Connect To: " + ip);
@@ -629,15 +680,8 @@ public class EpsonZplPrintJob{
 		this.feedAndCutMode = feedAndCutMode;
 	}
 
-	/**
-	 * Default is DPI 600
-	 * @return
-	 */
 	public DPI getDpi() {return dpi;}
-	/**
-	 * Default if not set is DPI 600
-	 * @param dpi
-	 */
+
 	public void setDpi(DPI dpi) {
 		this.dpi = dpi;
 	}
@@ -648,6 +692,30 @@ public class EpsonZplPrintJob{
 
 	public void setPrintQuality(PRINT_QUALITY printQuality) {
 		this.printQuality = printQuality;
+	}
+
+	public BigDecimal getLabelHeight() {
+		return labelHeight;
+	}
+
+	public void setLabelHeight(BigDecimal labelHeight) {
+		this.labelHeight = labelHeight;
+	}
+
+	public BigDecimal getLabelWidth() {
+		return labelWidth;
+	}
+
+	public void setLabelWidth(BigDecimal labelWidth) {
+		this.labelWidth = labelWidth;
+	}
+
+	public UNITS_OF_MEASUREMENT getUnitsOfMeasurement() {
+		return unitsOfMeasurement;
+	}
+
+	public void setUnitsOfMeasurement(UNITS_OF_MEASUREMENT unitsOfMeasurement) {
+		this.unitsOfMeasurement = unitsOfMeasurement;
 	}
 
 
@@ -672,10 +740,10 @@ public class EpsonZplPrintJob{
 	        this.resolution = resolution;
 	    }
 	    
-	    private int getResolution() { return resolution; }
+	    public int getResolution() { return resolution; }
 	  
 	    public String getZPL() {
-	    	return "^S(CLR,P," + this.getResolution();
+	    	return "^S(CLR,P," + this.getResolution() + "\r";
 	    }
 	}
 	
@@ -704,7 +772,7 @@ public class EpsonZplPrintJob{
 		public String getType() {return type;}
 
 		public String getZPL() {
-	    	return "^S(CLM,B," + this.getType();
+	    	return "^S(CLM,B," + this.getType() + "\r";
 	    }
 	}
 	
@@ -725,7 +793,7 @@ public class EpsonZplPrintJob{
 		NO_CUTTING("T"),
 		MANUAL_PEEL_AND_APPLICATION ("P"),
 		REWIND ("R"),
-		AUTOMATIC_PEEL_AND_APPLICATION ("A"),
+		AUTOMATIC_PEEL_AND_APPLICATION ("A"), //not suppored on c4000s
 		AUTOCUT ("C");
 		
 		private final String feedmode;   
@@ -740,8 +808,61 @@ public class EpsonZplPrintJob{
 
 
 		public String getZPL() {
-	    	return "^MM" + this.getFeedmode();
+	    	return "^MM" + this.getFeedmode() + "\r";
 	    }
+	}
+	
+	/**
+	 * Set units of Printer setting measurement
+	 * ^S(CMP,b,c
+	 * b=U: Basic printer unit system
+	 * c = D/I/M
+	 * 	D: Dots
+	 * 	I: Inches
+	 *  M: Millimeters
+	 * 
+	 */
+	public enum UNITS_OF_MEASUREMENT {
+
+		 
+		DOTS ("D"),
+		INCHES ("I"),
+		MILLIMETERS ("M");
+		
+		private final String units;   // in kilograms
+	    
+		UNITS_OF_MEASUREMENT(String units) {
+	        this.units = units;
+	    }
+	    
+		public String getUnits() {
+			return units;
+		}
+
+		/**
+		 * Gets units of Printer setting measurement
+		 * ^S(CMP,b,c
+		 * b=U: Basic printer unit system
+		 * c = D/I/M
+		 * 	D: Dots
+		 * 	I: Inches
+		 *  M: Millimeters
+		 * 
+		 */
+		private String getZPL() {
+	    	return "^S(CMP,U," + this.getUnits() + "\r";
+	    }
+		public String getZPL(DPI dpi)throws Exception {
+			if(dpi == null) {
+				return "";
+			}
+	    	return "^MU" + this.getUnits() + "," + dpi.getResolution() + "," + dpi.getResolution() + "\r";
+	    }
+		
+		@Override
+		public String toString(){
+			return this.getZPL();
+		}
 	}
 	
 	
@@ -774,7 +895,7 @@ public class EpsonZplPrintJob{
 
 
 		public String getZPL() {
-	    	return "^S(CPC,Q," + this.getQuality();
+	    	return "^S(CPC,Q," + this.getQuality() + "\r";
 	    }
 	}
 	
@@ -798,6 +919,25 @@ public class EpsonZplPrintJob{
 		}
 		return false;
 	}
+
+	public Integer getCloggedNozzles() {return cloggedNozzles;}
+	/**
+	 * ^S(CMV,b,c
+	 * b=C: Permitted clogged nozzle
+	 * c=0 ≤ c ≤ 16
+	 * @param nozzleCheckLabel
+	 */
+	public void setCloggedNozzles(Integer cloggedNozzles) {this.cloggedNozzles = cloggedNozzles;}
+
+	public Integer getNozzleCheckLabel() {return nozzleCheckLabel;}
+	/**
+	 * ^S(CMV,b,c
+	 * b=I: Self-test interval in printing (number of labels)
+	 * c=1 ≤ c ≤ 9999
+	 * @param nozzleCheckLabel
+	 */
+	public void setNozzleCheckLabel(Integer nozzleCheckLabel) {this.nozzleCheckLabel = nozzleCheckLabel;}
+	
 	
 
 }
