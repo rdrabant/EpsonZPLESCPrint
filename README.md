@@ -1,3 +1,9 @@
+This code was independently developed by ThinkREG for use with Epson printer ColorWorks CW-C4000. 
+Neither ThinkREG or Epson America, Inc. provide any warranties or support for this code. 
+“Epson” is the registered trademark of Epson America, Inc. and its affiliates in the 
+United States and other countries. Epson reserves all rights to its trademarks. 
+Epson and ThinkREG are independent companies.
+
 https://www.linkedin.com/in/robert-drabant/
 
 # EpsonZPLESCPrint
