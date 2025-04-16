@@ -1,7 +1,14 @@
 /*
  * Copyright 2025 Robert James Drabant II, ThinkREG
+ * https://www.linkedin.com/in/robert-drabant/
  * 
- * Created because I wanted a cleaner way to print to our Epsons we use in 
+ * This code was independently developed by ThinkREG for use with Epson printer ColorWorks CW-C4000. 
+ * Neither ThinkREG or Epson America, Inc. provide any warranties or support for this code. 
+ * “Epson” is the registered trademark of Epson America, Inc. and its affiliates in the 
+ * United States and other countries. Epson reserves all rights to its trademarks. 
+ * Epson and ThinkREG are independent companies.
+ *
+ * From the author, this was created because I wanted a cleaner way to print to our Epsons we use in 
  * conference and event management. We have mostly 4000s, but this should 
  * work with any Epson that supports ZPLII/ESC. I also want to thank team 
  * members at Epson for their support. 
@@ -18,6 +25,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ 
 package com.thinkreg.print;
 
 
@@ -29,13 +37,12 @@ public class EpsonZplPrinterResponse{
 	private String yellow;
 	private String maintenance;
 	private String message;
-	private String errorStatus;
+	private String errorCode;
 	private Boolean success = false;
 	private boolean errorBlocksPrinting = false;
 	
 
-	
-	public boolean getErrorBlocksPrinting() {return errorBlocksPrinting;}
+	public boolean isErrorBlocksPrinting() {return errorBlocksPrinting;}
 	public void setErrorBlocksPrinting(boolean errorBlocksPrinting) {
 		this.errorBlocksPrinting = errorBlocksPrinting;
 	}
@@ -61,50 +68,50 @@ public class EpsonZplPrinterResponse{
 	public Boolean getSuccess() {return success;}
 	public void setSuccess(Boolean success) {this.success = success;}
 	
-	public String getErrorStatus() {return errorStatus;}
-	public void setErrorStatus(String errorStatus) {
+	public String getErrorCode() {return errorCode;}
+	public void setErrorCode(String errorCode) {
 		
-		this.errorStatus = errorStatus;
+		this.errorCode = errorCode;
 	
-		if(errorStatus == null || errorStatus.trim().length() == 0){
+		if(errorCode == null || errorCode.trim().length() == 0){
 			//no action
-		}else if(errorStatus.equals("FE")){
+		}else if(errorCode.equals("FE")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("NI")){
+		}else if(errorCode.equals("NI")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("CO")){
+		}else if(errorCode.equals("CO")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("IE")){
+		}else if(errorCode.equals("IE")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("SN")){
+		}else if(errorCode.equals("SN")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("MF")){
+		}else if(errorCode.equals("MF")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("SS")){
+		}else if(errorCode.equals("SS")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("ST")){
+		}else if(errorCode.equals("ST")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("SR")){
+		}else if(errorCode.equals("SR")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("CI")){
+		}else if(errorCode.equals("CI")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("MN")){
+		}else if(errorCode.equals("MN")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("CM")){
+		}else if(errorCode.equals("CM")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("SE")){
+		}else if(errorCode.equals("SE")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("LT")){
+		}else if(errorCode.equals("LT")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("CS")){
+		}else if(errorCode.equals("CS")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("CF")){
+		}else if(errorCode.equals("CF")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("CR")){
+		}else if(errorCode.equals("CR")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("CG")){
+		}else if(errorCode.equals("CG")){
 			this.setErrorBlocksPrinting(true);
-		}else if(errorStatus.equals("SC")){
+		}else if(errorCode.equals("SC")){
 			this.setErrorBlocksPrinting(true);
 		}
 	}
