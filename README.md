@@ -9,7 +9,7 @@ https://www.linkedin.com/in/robert-drabant/
 # EpsonZPLESCPrint
 A set of Java Files to print to Epson ZPLII/ESC for the ColorWorks Series (tested with C4000u)
 
-Use exanmples for sending a print job to a printer. You send a Array of java.awt.image.BufferedImage, with each image being a lable/name badge. 
+Use examples for sending a print job to a printer. You send a Array of java.awt.image.BufferedImage, with each image being a lable/name badge. 
 
 This assumes the printer has an IP of 192.168.1.50
 
