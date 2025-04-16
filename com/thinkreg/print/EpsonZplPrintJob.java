@@ -1,8 +1,14 @@
 /*
  * Copyright 2025 Robert James Drabant II, ThinkREG
  * https://www.linkedin.com/in/robert-drabant/
+ * 
+ * This code was independently developed by ThinkREG for use with Epson printer ColorWorks CW-C4000. 
+ * Neither ThinkREG or Epson America, Inc. provide any warranties or support for this code. 
+ * “Epson” is the registered trademark of Epson America, Inc. and its affiliates in the 
+ * United States and other countries. Epson reserves all rights to its trademarks. 
+ * Epson and ThinkREG are independent companies.
  *
- * Created because I wanted a cleaner way to print to our Epsons we use in 
+ * From the author, this was created because I wanted a cleaner way to print to our Epsons we use in 
  * conference and event management. We have mostly 4000s, but this should 
  * work with any Epson that supports ZPLII/ESC. I also want to thank team 
  * members at Epson for their support. 
@@ -19,15 +25,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.thinkreg.print;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
@@ -145,7 +149,10 @@ public class EpsonZplPrintJob{
 	        try /*(BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(badgeAsFileZpl));
     		)*/{
 							
-	        	byte[] zplBytes = baos.toByteArray();
+	        	byte[] zplBytes = null;
+	        	if(baos != null) {
+	        		zplBytes = baos.toByteArray();
+	        	}
 	        	//fos.write(zplBytes);
 //					long currentTime = System.currentTimeMillis();
 				
@@ -167,6 +174,28 @@ public class EpsonZplPrintJob{
 		}
 		
 		return response;
+	}
+	
+	public EpsonZplPrinterResponse getPrinterStatus() throws IOException {
+	    
+	        
+		EpsonZplPrinterResponse response = null;
+	    
+		try {
+				
+			response = sendZpl(null, this.ip, this.port);
+			
+		}catch(Exception ex) {
+			ex.printStackTrace();
+		}
+			
+		if(response == null) {
+			response = new EpsonZplPrinterResponse();
+			response.setMessage("unknown error");
+		}
+		
+		return response;
+
 	}
 	
 	
@@ -410,7 +439,7 @@ public class EpsonZplPrintJob{
 	
 	private EpsonZplPrinterResponse sendZpl(byte[] zpl, String ip, int port) throws Exception {
 		
-		System.out.println("ABOUT TO TRY TO SEND ZPL: " + ip +":" + port);
+		//System.out.println("ABOUT TO TRY TO SEND ZPL: " + ip +":" + port);
 		
 //		String str = new String(zpl, StandardCharsets.UTF_8); 
 //		System.out.println("ZPL BEING SENT " + ip +":" + port + "\r" + str);
@@ -427,6 +456,9 @@ public class EpsonZplPrintJob{
 		baos.writeBytes("^XA\r".getBytes()); //1. 
 		baos.writeBytes("~H(SEA,E\r".getBytes()); //Sends the printer error status
 		
+//		baos.writeBytes("~H(CLS,L\r".getBytes()); //Printer replies with length
+//		baos.writeBytes("~H(CLS,P\r".getBytes()); //Printer replies with width
+						
 		//baos.writeBytes("~H(SMA,S\r".getBytes()); //Sends the printer operation status
 //		2-character ASCII string
 //		 ER: Error state
@@ -467,19 +499,19 @@ public class EpsonZplPrintJob{
 		
 		
 		 
-        File badgeAsFileZpl = new File("D:\\BadgeAsFile" + this.getIp() + ".zpl");
-        
-        try (BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(badgeAsFileZpl));){
-        				
-        	fos.write(zpl);
-		
-        }catch(Exception ex) {
-        	ex.printStackTrace();
-        }
+//        File badgeAsFileZpl = new File("D:\\BadgeAsFile" + this.getIp() + ".zpl");
+//        
+//        try (BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(badgeAsFileZpl));){
+//        				
+//        	fos.write(zpl);
+//		
+//        }catch(Exception ex) {
+//        	ex.printStackTrace();
+//        }
 		
 		
 
-//		long start = System.currentTimeMillis();
+		long start = System.currentTimeMillis();
 		EpsonZplPrinterResponse response = new EpsonZplPrinterResponse();
 
 		try (Socket clientSocket = new Socket(ip, port);
@@ -508,26 +540,20 @@ public class EpsonZplPrintJob{
 	        //start = System.currentTimeMillis();
 	        
 	        //boolean readIq = false;
-	        //laast command is Mn
+	        //last command is Mn
 	        boolean readMn = false;
-	        //boolean printerStatus = 
 	        boolean done = false;
 	        
-	        //while (((System.currentTimeMillis() - continueListinging) < 250) || (fromPrinter = in.readLine()) != null ) {
 	        while (!done && (fromPrinter = in.readLine()) != null ) {
-			    //System.out.println("echo: " + fromPrinter);
-//			    if(fromPrinter == null) {
-//			    	break;
-//			    }
 		    	
 			    fromPrinter = fromPrinter.replace(String.valueOf(STX), "");
 			    fromPrinter = fromPrinter.replace(String.valueOf(ETX), "");
 			    
-			    //System.out.println("fromPrinter: " + fromPrinter);
+//			    System.out.println("fromPrinter: " + fromPrinter);
 			    
 			    if(fromPrinter.startsWith("^S(SEA,E,")) {//It's ink levels
 			    	fromPrinter = fromPrinter.replace("^S(SEA,E,", "");
-			    	response.setErrorStatus(fromPrinter);
+			    	response.setErrorCode(fromPrinter);
 			    	
 			    }else if(fromPrinter.startsWith("IQ,")) {//It's ink levels
 			    	fromPrinter = fromPrinter.replace("IQ,", "");
@@ -549,17 +575,14 @@ public class EpsonZplPrintJob{
 			    		response.setBlack(inkLevels[0]);
 			    		
 			    		if(inkLevels.length > 1) {
-//			    			cyan = inkLevels[1];
 			    			response.setCyan(inkLevels[1]);
 				    	}
 			    		
 			    		if(inkLevels.length > 2) {
-			    			//magenenta = inkLevels[2];
 			    			response.setMagenta(inkLevels[2]);
 			    		}
 			    		
 			    		if(inkLevels.length > 3) {
-			    			//yellow = inkLevels[3];
 			    			response.setYellow(inkLevels[3]);
 			    		}
 			    	}
@@ -618,16 +641,17 @@ public class EpsonZplPrintJob{
 //			    	System.out.println("Read Complete in " + (System.currentTimeMillis() - start));
 			    }
 			    	
-			    
-			    	
 			}
 		
 			
 	        //response.setMessage((System.currentTimeMillis() - start) + " millis to connect to printer and transmits data.");
+	        if(response.isErrorBlocksPrinting()) {
+	        	response.setMessage(EpsonZplPrinterResponse.getErrorMessage(response.getErrorCode()));
+	        }
 	        
 	        response.setSuccess(true);
 		}catch(ConnectException c1) {
-			response.setMessage("Cannot Connect To: " + ip);
+			throw new Exception("Cannot connect to printer : " + ip + ":" + port, c1);
 		}catch (SocketTimeoutException s1) {
 			response.setMessage("SOCKET TIMED OUT");
 //			throw new Exception("Cannot print label on this printer : " + ip + ":" + port, e1);
@@ -636,8 +660,9 @@ public class EpsonZplPrintJob{
 			throw new Exception("Cannot print label on this printer : " + ip + ":" + port, e1);
 		}
 		
+		System.out.println((System.currentTimeMillis() - start) + " millis to connect to printer and transmits data.");
 		return response;
-		//System.out.println((System.currentTimeMillis() - start) + " millis to connect to printer and transmits data.");
+		
 	}
 
 
