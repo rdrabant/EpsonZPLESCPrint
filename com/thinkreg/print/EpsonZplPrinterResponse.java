@@ -37,16 +37,12 @@ public class EpsonZplPrinterResponse{
 	private String yellow;
 	private String maintenance;
 	private String message;
-	private String errorCode;
+	private ERROR_CODE errorCode = null;
 	private Boolean success = false;
-	private boolean errorBlocksPrinting = false;
+	//private boolean errorBlocksPrinting = false;
+	private boolean successfulConnection = false;
 	
 
-	public boolean isErrorBlocksPrinting() {return errorBlocksPrinting;}
-	public void setErrorBlocksPrinting(boolean errorBlocksPrinting) {
-		this.errorBlocksPrinting = errorBlocksPrinting;
-	}
-	
 	public String getBlack() {return black;}
 	public void setBlack(String black) {this.black = black;}
 
@@ -68,52 +64,41 @@ public class EpsonZplPrinterResponse{
 	public Boolean getSuccess() {return success;}
 	public void setSuccess(Boolean success) {this.success = success;}
 	
-	public String getErrorCode() {return errorCode;}
-	public void setErrorCode(String errorCode) {
-		
-		this.errorCode = errorCode;
-	
-		if(errorCode == null || errorCode.trim().length() == 0){
-			//no action
-		}else if(errorCode.equals("FE")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("NI")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("CO")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("IE")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("SN")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("MF")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("SS")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("ST")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("SR")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("CI")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("MN")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("CM")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("SE")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("LT")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("CS")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("CF")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("CR")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("CG")){
-			this.setErrorBlocksPrinting(true);
-		}else if(errorCode.equals("SC")){
-			this.setErrorBlocksPrinting(true);
+	public boolean isSuccessfulConnection() {return successfulConnection;}
+	public void setSuccessfulConnection(boolean successfulConnection) throws Exception {
+		if(!successfulConnection) {
+			throw new Exception("SET TO FALSE? Why");
 		}
+		this.successfulConnection = successfulConnection;
+	}
+	
+	/**
+	 * Returns the error code, or null if unble to connect
+	 * @return
+	 */
+	public ERROR_CODE getErrorCode() {return errorCode;}
+	public void setErrorCode(ERROR_CODE errorCode) {
+		this.errorCode = errorCode;
+	}
+	
+	public void setErrorCode(String errorCode) {
+//		if(errorCode == null || errorCode.trim().length() == 0) {
+//			this.errorCode = ERROR_CODE.NE;
+//			return;
+//		}
+		
+		if(errorCode != null) {
+			for(ERROR_CODE code: ERROR_CODE.values()) {
+				if(code.getCode().equals(errorCode)) {
+					this.errorCode = code;
+				}
+			}
+		}
+		
+		if(this.errorCode == null) {
+			this.errorCode = ERROR_CODE.UNKNOWN;
+		}
+		
 	}
 	
 	/**
@@ -158,9 +143,114 @@ public class EpsonZplPrinterResponse{
 	}
 	
 	
-	public static String getErrorMessage(String code) {
+//	public String getErrorMessage() {
+//				
+//		//esc printer language guide
+////		NE: No error
+////		FE: Fatal error
+////		NI: Interface not selected error
+////		CO: Cover open error (Roll cover)
+////		IE: Replace Ink cartridge, or No Ink cartridge error
+////		SJ: Paper jam error
+////		SN: Paper out error
+////		MF: Replace maintenance box error
+////		SS: Media size error
+////		ST: Media source error
+////		SR: Paper recognition error
+////		CI: Ink cartridge cover open error
+////		MN: No maintenance box error
+////		CM: Maintenance box cover open error
+////		SE: Paper removal error
+////		LT: Maintenance error (tube life)
+////		CS: Paper cover open error
+////		CF: Front cover open error
+////		CR: Release lever open error
+////		CG: Guide unit open error
+////		SC: Sensor calibration error
+////		IC: Cleaning not available due to
+////		low remaining ink
+////		MC: Cleaning not available due to insufficient waste ink capacity
+//		
+//		//4000 specific
+//		//NE No error
+////		FE Fatal error
+////		CO Cover open error (paper cover) *1
+////		IE Replace Ink cartridge, or No Ink cartridge error
+////		SJ Paper jam error
+////		SN Paper out error
+////		MF Replace maintenance box error
+////		SS Media size error
+////		ST Media source error
+////		SR Paper recognition error
+////		CI Ink cartridge cover open error
+////		MN No maintenance box error
+////		CM Maintenance box cover open error
+////		SE Paper removal error
+////		LT Maintenance error (tube life)
+////		SC Sensor calibration error
+////		IC Cleaning not available due to low remaining ink
+////		MC Cleaning not available due to insufficient waste ink capacity
+//		
+//		if(!this.isSuccessfulConnection()) {
+//			return "Unable to connect to printer";
+//		}
+//		
+//			if(this.getErrorCode() == null || this.getErrorCode().trim().length() == 0){
+//				return null;
+//			}else if(this.getErrorCode().equals("NE")){
+//				return "No error";
+//			}else if(this.getErrorCode().equals("FE")){
+//				return "Fatal error";
+//			}else if(this.getErrorCode().equals("NI")){
+//				return "Interface not selected error";
+//			}else if(this.getErrorCode().equals("CO")){
+//				return "Cover open error (Roll cover)";
+//			}else if(this.getErrorCode().equals("IE")){
+//				return "Replace Ink cartridge, or No Ink cartridge error";
+//			}else if(this.getErrorCode().equals("SN")){
+//				return "Paper out error";
+//			}else if(this.getErrorCode().equals("MF")){
+//				return "Replace maintenance box error";
+//			}else if(this.getErrorCode().equals("SS")){
+//				return "Media size error";
+//			}else if(this.getErrorCode().equals("ST")){
+//				return "Media source error";
+//			}else if(this.getErrorCode().equals("SR")){
+//				return "Paper recognition error";
+//			}else if(this.getErrorCode().equals("CI")){
+//				return "Ink cartridge cover open error";
+//			}else if(this.getErrorCode().equals("MN")){
+//				return "No maintenance box error";
+//			}else if(this.getErrorCode().equals("CM")){
+//				return "Maintenance box cover open error";
+//			}else if(this.getErrorCode().equals("SE")){
+//				return "Paper removal error";
+//			}else if(this.getErrorCode().equals("LT")){
+//				return "Maintenance error (tube life)";
+//			}else if(this.getErrorCode().equals("CS")){
+//				return "Paper cover open error";
+//			}else if(this.getErrorCode().equals("CF")){
+//				return "Front cover open error";
+//			}else if(this.getErrorCode().equals("CR")){
+//				return "Release lever open error";
+//			}else if(this.getErrorCode().equals("CG")){
+//				return "Guide unit open error";
+//			}else if(this.getErrorCode().equals("SC")){
+//				return "Sensor calibration error";
+//			}else if(this.getErrorCode().equals("IC")){
+//				return "Cleaning not available due to low remaining ink";
+//			}else if(this.getErrorCode().equals("MC")){
+//				return "Cleaning not available due to insufficient waste ink capacity";
+//			}
+//			
+//			return null;
+//		
+//		}
+	
+	public enum ERROR_CODE{
+	
 		
-//		2-character ASCII string
+		//esc printer language guide
 //		NE: No error
 //		FE: Fatal error
 //		NI: Interface not selected error
@@ -182,56 +272,75 @@ public class EpsonZplPrinterResponse{
 //		CR: Release lever open error
 //		CG: Guide unit open error
 //		SC: Sensor calibration error
+//		IC: Cleaning not available due to
+//		low remaining ink
+//		MC: Cleaning not available due to insufficient waste ink capacity
 		
-			if(code == null || code.trim().length() == 0){
-				return null;
-			}else if(code.equals("NE")){
-				return "No error";
-			}else if(code.equals("FE")){
-				return "Fatal error";
-			}else if(code.equals("NI")){
-				return "Interface not selected error";
-			}else if(code.equals("CO")){
-				return "Cover open error (Roll cover)";
-			}else if(code.equals("IE")){
-				return "Replace Ink cartridge, or No Ink cartridge error";
-			}else if(code.equals("SN")){
-				return "Paper out error";
-			}else if(code.equals("MF")){
-				return "Replace maintenance box error";
-			}else if(code.equals("SS")){
-				return "Media size error";
-			}else if(code.equals("ST")){
-				return "Media source error";
-			}else if(code.equals("SR")){
-				return "Paper recognition error";
-			}else if(code.equals("CI")){
-				return "Ink cartridge cover open error";
-			}else if(code.equals("MN")){
-				return "No maintenance box error";
-			}else if(code.equals("CM")){
-				return "Maintenance box cover open error";
-			}else if(code.equals("SE")){
-				return "Paper removal error";
-			}else if(code.equals("LT")){
-				return "Maintenance error (tube life)";
-			}else if(code.equals("CS")){
-				return "Paper cover open error";
-			}else if(code.equals("CF")){
-				return "Front cover open error";
-			}else if(code.equals("CR")){
-				return "Release lever open error";
-			}else if(code.equals("CG")){
-				return "Guide unit open error";
-			}else if(code.equals("SC")){
-				return "Sensor calibration error";
-			}else if(code.equals("IC")){
-				return "Cleaning not available due to low remaining ink";
-			}else if(code.equals("MC")){
-				return "Cleaning not available due to insufficient waste ink capacity";
-			}
-			
-			return null;
+		//4000 specific
+		//NE No error
+//		FE Fatal error
+//		CO Cover open error (paper cover) *1
+//		IE Replace Ink cartridge, or No Ink cartridge error
+//		SJ Paper jam error
+//		SN Paper out error
+//		MF Replace maintenance box error
+//		SS Media size error
+//		ST Media source error
+//		SR Paper recognition error
+//		CI Ink cartridge cover open error
+//		MN No maintenance box error
+//		CM Maintenance box cover open error
+//		SE Paper removal error
+//		LT Maintenance error (tube life)
+//		SC Sensor calibration error
+//		IC Cleaning not available due to low remaining ink
+//		MC Cleaning not available due to insufficient waste ink capacity
 		
-		}
+		NE ("NE", false, "No error"),
+		FE ("FE", true, "Fatal error"),
+		NI ("NI", true, "Interface not selected error"),
+		CO ("CO", true, "Cover open error (paper cover)"),
+		IE ("IE", true, "Replace Ink cartridge, or No Ink cartridge error"),
+		SJ ("SJ", true, "Paper jam error"),
+		SN ("SN", true, "Paper out error"),
+		MF ("MF", true, "Replace maintenance box error"),
+		SS ("SS", true, "Media size error"),
+		ST ("ST", true, "Media source error"),
+		SR ("SR", true, "Paper recognition error"),
+		CI ("CI", true, "Ink cartridge cover open error"),
+		MN ("MN", true, "No maintenance box error"),
+		CM ("CM", true, "Maintenance box cover open error"),
+		SE ("SE", true, "Paper removal error"),
+		LT ("LT", true, "Maintenance error (tube life)"),
+		CS ("CS", true, "Paper cover open error"),
+		CF ("CF", true, "Front cover open error"),
+		CR ("CR", true, "Release lever open error"),
+		CG ("CG", true, "Guide unit open error"),
+		SC ("SC", true, "Sensor calibration error"),
+		IC ("IC", true, "Cleaning not available due to low remaining ink"),
+		MC ("MC", true, "Cleaning not available due to insufficient waste ink capacity"),
+		UNKNOWN ("UNKNOWN", true, "UNKNOWN ERROR");
+		
+		
+		private final String code;
+		private final boolean blocksPrinting;   
+		private final String message;  
+		
+		
+	    
+		ERROR_CODE(String code, boolean blocksPrinting, String message) {
+	       this.code = code;
+	       this.blocksPrinting = blocksPrinting;
+	       this.message = message;
+	    }
+
+
+		public String getCode() {return code;}
+		
+		public boolean isBlocksPrinting() {return blocksPrinting;}
+		
+		public String getMessage() {return message;}
+	    
+		
+	}
 }
