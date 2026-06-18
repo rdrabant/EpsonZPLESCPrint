@@ -317,8 +317,8 @@ public class EpsonZplPrinterResponse{
 		CR ("CR", true, "Release lever open error"),
 		CG ("CG", true, "Guide unit open error"),
 		SC ("SC", true, "Sensor calibration error"),
-		IC ("IC", true, "Cleaning not available due to low remaining ink"),
-		MC ("MC", true, "Cleaning not available due to insufficient waste ink capacity"),
+		IC ("IC", false, "Cleaning not available due to low remaining ink"),
+		MC ("MC", false, "Cleaning not available due to insufficient waste ink capacity"),
 		UNKNOWN ("UNKNOWN", true, "UNKNOWN ERROR");
 		
 		
@@ -334,11 +334,10 @@ public class EpsonZplPrinterResponse{
 	       this.message = message;
 	    }
 
-
 		public String getCode() {return code;}
-		
+
 		public boolean isBlocksPrinting() {return blocksPrinting;}
-		
+
 		public String getMessage() {return message;}
 	    
 		
