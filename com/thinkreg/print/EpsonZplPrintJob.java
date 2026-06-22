@@ -45,7 +45,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import com.thinkreg.boot.util.WRPUtils;
+
 
 
 public class EpsonZplPrintJob{
@@ -457,7 +457,7 @@ public class EpsonZplPrintJob{
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-		if(!WRPUtils.isEmpty(zpl)) {
+		if(zpl == null || zpl.length == 0) {
 			baos.write(zpl);
 		}
 
