@@ -865,7 +865,7 @@ public class EpsonZplPrintJob{
 
 		BLACK_MARK ("M"),
 		GAP ("W"),
-		NONE ("D");
+		NONE ("N");
 
 		private final String type;   // in kilograms
 
@@ -876,7 +876,7 @@ public class EpsonZplPrintJob{
 		public String getType() {return type;}
 
 		public String getZPL() {
-			return "^S(CLM,B," + this.getType() + "\r";
+			return "^S(CLM,D," + this.getType() + "\r";
 		}
 	}
 
