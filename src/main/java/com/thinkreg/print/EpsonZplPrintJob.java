@@ -665,10 +665,12 @@ public class EpsonZplPrintJob{
 					//replies sent after QMN (firmware version, serial number) are still read.
 					//			    	readMn = true;
 				}else if(fromPrinter.startsWith("^S(IMF,V,")) {//firmware version (~H(IMF,V)
-					response.setFirmwareVersion(fromPrinter.replace("^S(IMF,V,", ""));
+					String fw = fromPrinter.replace("^S(IMF,V,", "");
+					response.setMessage((response.getMessage() == null ? "" : response.getMessage() + " ") + "FW:" + fw);
 
 				}else if(fromPrinter.startsWith("^S(IMP,S,")) {//serial number (~H(IMP,S)
-					response.setSerialNumber(fromPrinter.replace("^S(IMP,S,", ""));
+					String sn = fromPrinter.replace("^S(IMP,S,", "");
+					response.setMessage((response.getMessage() == null ? "" : response.getMessage() + " ") + "SN:" + sn);
 
 				}/*else if(fromPrinter.startsWith("MN,")) {//It's ink levels
 					fromPrinter = fromPrinter.replace("MN,", "");
